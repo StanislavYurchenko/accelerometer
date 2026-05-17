@@ -49,6 +49,24 @@ async function initML() {
 
 initML();
 
+copyBtn.addEventListener('click', () => {
+    // Беремо текст із нашого pre-блоку
+    const textToCopy = featuresDebug.innerText;
+    
+    // Копіюємо в буфер обміну телефону
+    navigator.clipboard.writeText(textToCopy).then(() => {
+        const originalText = copyBtn.innerText;
+        copyBtn.innerText = "✅ Скопійовано!";
+        // Повертаємо текст кнопки назад через 2 секунди
+        setTimeout(() => {
+            copyBtn.innerText = originalText;
+        }, 2000);
+    }).catch(err => {
+        console.error("Помилка копіювання:", err);
+        alert("Не вдалося скопіювати. Спробуй виділити текст вручну.");
+    });
+});
+
 startBtn.addEventListener('click', async () => {
     if (typeof DeviceMotionEvent.requestPermission === 'function') {
         try {
@@ -185,21 +203,3 @@ Features: ${JSON.stringify(features.map(f => f.toFixed(2)))}
         statusDiv.innerHTML = `<span style="font-size: 1.2rem; color: #ef4444;">Помилка: ${err.message}</span>`;
     }
 }
-
-copyBtn.addEventListener('click', () => {
-    // Беремо текст із нашого pre-блоку
-    const textToCopy = featuresDebug.innerText;
-    
-    // Копіюємо в буфер обміну телефону
-    navigator.clipboard.writeText(textToCopy).then(() => {
-        const originalText = copyBtn.innerText;
-        copyBtn.innerText = "✅ Скопійовано!";
-        // Повертаємо текст кнопки назад через 2 секунди
-        setTimeout(() => {
-            copyBtn.innerText = originalText;
-        }, 2000);
-    }).catch(err => {
-        console.error("Помилка копіювання:", err);
-        alert("Не вдалося скопіювати. Спробуй виділити текст вручну.");
-    });
-});
