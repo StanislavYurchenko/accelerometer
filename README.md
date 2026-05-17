@@ -49,4 +49,15 @@ The `skl2onnx` library adds a `ZipMap` operator to the Random Forest output grap
 
 During live testing, a clear example of **Domain Shift** was discovered:
 - The model **flawlessly recognizes Running**, as the amplitude of oscillations during a run easily breaks through the thresholds set by the decision trees.
-- However, the model tends to
+- However, the model tends to classify normal, smooth **Walking** (when the phone is held in a relaxed hand) as **Idle**. 
+
+*Why does this happen?* During walking, the human arm acts as a natural shock absorber, dampening the micro-impacts of feet hitting the ground. The live data turns out to be too "smooth" for a model that was trained on a laboratory dataset with a more rigid sensor attachment (e.g., in a pocket or strapped to a leg). This demonstrates a fundamental rule of Data Science: a model performs exactly as it was taught, and real-world deployment always requires calibration of data collection.
+
+---
+
+## 📂 Repository Structure
+- `index.html` — Application UI with versioning and a metrics panel.
+- `app.js` — The core engine: sensor handling, calculation of 15 features, and ONNX inference logic.
+- `style.css` — UI styling in a Dark Cyberpunk aesthetic.
+- `scaler.onnx` — Serialized data standardization model.
+- `classifier.onnx` — Serialized Random Forest model.
