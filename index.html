@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Activity Tracker (ONNX)</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <h2>Activity Status:</h2>
+    <div id="status">Loading AI...</div>
+    <button id="startBtn">Enable Sensors</button>
+    
+    <div class="debug-panel">
+        <h3>Real-time Metrics:</h3>
+        <p>Window Progress: <span id="windowProgress">0</span> / 80</p>
+        <p>Current Magnitude: <span id="currentMag">0.00</span></p>
+        <p>ML Features (15 items):</p>
+        <pre id="featuresDebug">Awaiting first window...</pre>
+    </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
