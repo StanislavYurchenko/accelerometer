@@ -145,18 +145,23 @@ async function runModelInference(X, Y, Z) {
     const inputTensor = new ort.Tensor('float32', Float32Array.from(features), [1, 15]);
 
     try {
-        // Step A: Standardization via scaler.onnx
+        // Step A: Standardization
         const scalerResults = await scalerSession.run({ float_input: inputTensor });
-        const scaledFeatures = scalerResults.variable;
+        
+        // Scaler outputs are always standard tensors, we take the first available variable
+        const scalerOutputKey = Object.keys(scalerResults)[0];
+        const scaledFeatures = scalerResults[scalerOutputKey];
 
-        // Step B: Classification via classifier.onnx
+        // Step B: Classification
         const classifierResults = await classifierSession.run({ float_input: scaledFeatures });
+        
+        // STRICT FIX: Explicitly request ONLY the 'label' tensor, ignoring non-tensor probability maps
         const predictedClass = classifierResults.label.data[0];
 
-        statusDiv.innerText = activityClasses[predictedClass] || "Unknown";
+        statusDiv.innerText = activityClasses[predictedClass] || "Unknown class: " + predictedClass;
 
     } catch (err) {
-        console.error("ONNX Inference Error:", err);
-        statusDiv.innerText = "AI Run Error: " + err.message;
+        console.error("ONNX Runtime Fail:", err);
+        statusDiv.innerText = "Error: " + err.message;
     }
 }
