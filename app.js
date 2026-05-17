@@ -14,59 +14,56 @@ let windowZ = [];
 const WINDOW_SIZE = 80;
 
 const activityClasses = {
-    0: "🧘‍♂️ Rest",
-    1: "🚶‍♂️ Walking",
-    2: "🧗‍♂️ Stairs",
-    3: "🏃‍♂️ Running"
+    0: "🧘‍♂️ Спокій (Idle)",
+    1: "🚶‍♂️ Ходьба",
+    2: "🧗‍♂️ Сходи",
+    3: "🏃‍♂️ Біг"
 };
 
-// Load ONNX sessions securely using ArrayBuffer (fixes GitHub Pages 404/MIME bugs)
+// Завантаження ONNX моделей через ArrayBuffer
 async function initML() {
     try {
         statusDiv.innerText = "Initializing AI...";
 
-        // Fetch scaler.onnx as raw bytes
         const scalerResponse = await fetch('scaler.onnx');
         if (!scalerResponse.ok) throw new Error(`Failed to fetch scaler.onnx (Status: ${scalerResponse.status})`);
         const scalerBuffer = await scalerResponse.arrayBuffer();
 
-        // Fetch classifier.onnx as raw bytes
         const classifierResponse = await fetch('classifier.onnx');
         if (!classifierResponse.ok) throw new Error(`Failed to fetch classifier.onnx (Status: ${classifierResponse.status})`);
         const classifierBuffer = await classifierResponse.arrayBuffer();
 
-        // Initialize ONNX sessions directly from memory buffers
         scalerSession = await ort.InferenceSession.create(new Uint8Array(scalerBuffer));
         classifierSession = await ort.InferenceSession.create(new Uint8Array(classifierBuffer));
 
         statusDiv.innerText = "Ready to Track";
     } catch (e) {
-        // This will show exactly what went wrong during fetch or initialization
         statusDiv.innerText = "ONNX Load Error: " + e.message;
-        console.error(e);
+        console.error("Помилка завантаження моделей:", e);
     }
 }
 
 initML();
 
+// Логіка копіювання із захистом
 copyBtn.addEventListener('click', () => {
-    // Беремо текст із нашого pre-блоку
     const textToCopy = featuresDebug.innerText;
     
-    // Копіюємо в буфер обміну телефону
-    navigator.clipboard.writeText(textToCopy).then(() => {
-        const originalText = copyBtn.innerText;
-        copyBtn.innerText = "✅ Скопійовано!";
-        // Повертаємо текст кнопки назад через 2 секунди
-        setTimeout(() => {
-            copyBtn.innerText = originalText;
-        }, 2000);
-    }).catch(err => {
-        console.error("Помилка копіювання:", err);
-        alert("Не вдалося скопіювати. Спробуй виділити текст вручну.");
-    });
+    if (navigator && navigator.clipboard) {
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            const originalText = copyBtn.innerText;
+            copyBtn.innerText = "✅ Скопійовано!";
+            setTimeout(() => { copyBtn.innerText = originalText; }, 2000);
+        }).catch(err => {
+            console.error("Помилка копіювання:", err);
+            alert("Браузер заблокував копіювання. Виділи текст вручну.");
+        });
+    } else {
+        alert("Копіювання доступне тільки через HTTPS. Виділи текст вручну.");
+    }
 });
 
+// Запуск сенсорів
 startBtn.addEventListener('click', async () => {
     if (typeof DeviceMotionEvent.requestPermission === 'function') {
         try {
@@ -111,7 +108,7 @@ function startSensorTracking() {
     });
 }
 
-// Extract 15 features matching Python logic
+// Розрахунок 15 фіч
 function extractFeatures(X, Y, Z) {
     const getMean = arr => arr.reduce((a, b) => a + b, 0) / arr.length;
     const getStd = (arr, mean) => Math.sqrt(arr.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / arr.length);
@@ -155,41 +152,36 @@ function extractFeatures(X, Y, Z) {
     ];
 }
 
+// Запуск ONNX
 async function runModelInference(X, Y, Z) {
     if (!scalerSession || !classifierSession) return;
 
     const features = extractFeatures(X, Y, Z);
     
-    // Дістаємо точні імена, які зашиті всередині твоїх .onnx файлів
     const scalerInName = scalerSession.inputNames[0];
     const scalerOutName = scalerSession.outputNames[0];
     const classInName = classifierSession.inputNames[0];
-    const classOutNames = classifierSession.outputNames; // Тут може бути ['label', 'probabilities']
+    const classOutNames = classifierSession.outputNames;
 
-    // Виводимо цю інфу на екран
-    featuresDebug.innerText = `
-[DEBUG INFO]
+    featuresDebug.innerText = `[DEBUG INFO]
 Scaler IN: ${scalerInName} | OUT: ${scalerOutName}
 Model IN: ${classInName} | OUTs: ${classOutNames.join(', ')}
 -------------------
-Features: ${JSON.stringify(features.map(f => f.toFixed(2)))}
-    `.trim();
+Features:
+${JSON.stringify(features.map(f => Number(f.toFixed(3))))}`;
 
     try {
         const inputTensor = new ort.Tensor('float32', Float32Array.from(features), [1, 15]);
 
-        // Динамічно формуємо вхід для скалера
         let scalerInput = {};
         scalerInput[scalerInName] = inputTensor;
         
         const scalerResults = await scalerSession.run(scalerInput);
         const scaledFeatures = scalerResults[scalerOutName];
 
-        // Динамічно формуємо вхід для моделі
         let classifierInput = {};
         classifierInput[classInName] = scaledFeatures;
 
-        // Строго просимо повернути ТІЛЬКИ перший вихід (зазвичай це label)
         const expectedOutputs = [classOutNames[0]];
 
         const classifierResults = await classifierSession.run(classifierInput, expectedOutputs);
@@ -199,7 +191,6 @@ Features: ${JSON.stringify(features.map(f => f.toFixed(2)))}
 
     } catch (err) {
         console.error("ONNX Full Error:", err);
-        // Виводимо максимально детальну помилку червоним кольором
         statusDiv.innerHTML = `<span style="font-size: 1.2rem; color: #ef4444;">Помилка: ${err.message}</span>`;
     }
 }
