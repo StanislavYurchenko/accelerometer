@@ -19,14 +19,28 @@ const activityClasses = {
     3: "🏃‍♂️ Running"
 };
 
-// Load ONNX sessions
+// Load ONNX sessions securely using ArrayBuffer (fixes GitHub Pages 404/MIME bugs)
 async function initML() {
     try {
         statusDiv.innerText = "Initializing AI...";
-        scalerSession = await ort.InferenceSession.create('scaler.onnx');
-        classifierSession = await ort.InferenceSession.create('classifier.onnx');
+
+        // Fetch scaler.onnx as raw bytes
+        const scalerResponse = await fetch('scaler.onnx');
+        if (!scalerResponse.ok) throw new Error(`Failed to fetch scaler.onnx (Status: ${scalerResponse.status})`);
+        const scalerBuffer = await scalerResponse.arrayBuffer();
+
+        // Fetch classifier.onnx as raw bytes
+        const classifierResponse = await fetch('classifier.onnx');
+        if (!classifierResponse.ok) throw new Error(`Failed to fetch classifier.onnx (Status: ${classifierResponse.status})`);
+        const classifierBuffer = await classifierResponse.arrayBuffer();
+
+        // Initialize ONNX sessions directly from memory buffers
+        scalerSession = await ort.InferenceSession.create(new Uint8Array(scalerBuffer));
+        classifierSession = await ort.InferenceSession.create(new Uint8Array(classifierBuffer));
+
         statusDiv.innerText = "Ready to Track";
     } catch (e) {
+        // This will show exactly what went wrong during fetch or initialization
         statusDiv.innerText = "ONNX Load Error: " + e.message;
         console.error(e);
     }
