@@ -27,7 +27,7 @@ async function initML() {
         classifierSession = await ort.InferenceSession.create('classifier.onnx');
         statusDiv.innerText = "Ready to Track";
     } catch (e) {
-        statusDiv.innerText = "ONNX Model Load Error";
+        statusDiv.innerText = "ONNX Load Error: " + e.message;
         console.error(e);
     }
 }
@@ -143,6 +143,6 @@ async function runModelInference(X, Y, Z) {
 
     } catch (err) {
         console.error("ONNX Inference Error:", err);
-        statusDiv.innerText = "AI Error";
+        statusDiv.innerText = "AI Run Error: " + err.message;
     }
 }
