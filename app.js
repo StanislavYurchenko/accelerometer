@@ -20,7 +20,6 @@ const activityClasses = {
     3: "🏃‍♂️ Біг"
 };
 
-// Завантаження ONNX моделей через ArrayBuffer
 async function initML() {
     try {
         statusDiv.innerText = "Initializing AI...";
@@ -45,7 +44,6 @@ async function initML() {
 
 initML();
 
-// Логіка копіювання із захистом
 copyBtn.addEventListener('click', () => {
     const textToCopy = featuresDebug.innerText;
     
@@ -63,7 +61,6 @@ copyBtn.addEventListener('click', () => {
     }
 });
 
-// Запуск сенсорів
 startBtn.addEventListener('click', async () => {
     if (typeof DeviceMotionEvent.requestPermission === 'function') {
         try {
