@@ -23,8 +23,8 @@ const activityClasses = {
 async function initML() {
     try {
         statusDiv.innerText = "Initializing AI...";
-        scalerSession = await ort.InferenceSession.create('./model/scaler.onnx');
-        classifierSession = await ort.InferenceSession.create('./model/classifier.onnx');
+        scalerSession = await ort.InferenceSession.create('model/scaler.onnx');
+        classifierSession = await ort.InferenceSession.create('model/classifier.onnx');
         statusDiv.innerText = "Ready to Track";
     } catch (e) {
         statusDiv.innerText = "ONNX Model Load Error";
