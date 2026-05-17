@@ -12,13 +12,14 @@ async function runModelInference(X, Y, Z) {
         const scalerOutputKey = Object.keys(scalerResults)[0];
         const scaledFeatures = scalerResults[scalerOutputKey];
 
-        // Step B: Classification (Strictly request ONLY 'label' output from Random Forest)
+        // Step B: Classification (СТРОГО просимо тільки 'label')
         const classifierResults = await classifierSession.run(
             { float_input: scaledFeatures },
-            ['label']
+            ['label'] // <--- ОСЬ ЦЕЙ РЯДОК ВИРІШУЄ ПРОБЛЕМУ
         );
         
         const predictedClass = classifierResults.label.data[0];
+
         statusDiv.innerText = activityClasses[predictedClass] || "Unknown class: " + predictedClass;
 
     } catch (err) {
